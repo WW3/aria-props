@@ -82,13 +82,22 @@
                         </svg></div>
                     <div>
                         <p class="font-bold">Running Locally?</p>
-                        <p class="text-sm">If you run this file on your computer, you must provide your own Gemini API
+                        <p class="text-sm">If you run this file on your computer, you must provide your own OpenAI API
                             key below for the AI features to work.</p>
                         <div class="mt-2">
-                            <label for="api-key-input" class="sr-only">Gemini API Key</label>
+                            <label for="api-key-input" class="sr-only">OpenAI API Key</label>
                             <input type="password" id="api-key-input"
                                 class="block w-full md:w-2/3 p-2 border border-gray-300 rounded-md shadow-sm"
-                                placeholder="Paste your Gemini API key here">
+                                placeholder="Paste your OpenAI API key here">
+                            <p class="mt-2 text-xs text-gray-600">Your key is used only from your browser.</p>
+                            <div class="mt-2 flex items-center gap-4">
+                                <label class="text-sm text-gray-700 inline-flex items-center gap-2">
+                                    <input id="remember-key-checkbox" type="checkbox" class="rounded border-gray-300">
+                                    Remember key on this device
+                                </label>
+                                <button id="clear-key-btn" type="button"
+                                    class="text-sm text-red-700 underline hover:text-red-800">Remove saved key</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -228,7 +237,7 @@
             </section>
         </main>
     </div>
-    <dialog id="gemini-modal" aria-labelledby="modal-title"
+    <dialog id="ai-modal" aria-labelledby="modal-title"
         class="p-5 border border-gray-300 w-full max-w-2xl shadow-lg rounded-md bg-white">
         <div id="dialog-content-wrapper" class="text-center"></div>
     </dialog>
@@ -244,11 +253,13 @@
         const errorMessage = document.getElementById('error-message');
         const liveFeedback = document.getElementById('live-feedback');
         const suggestBtn = document.getElementById('suggest-implementation-btn');
-        const modal = document.getElementById('gemini-modal');
+        const modal = document.getElementById('ai-modal');
         const dialogContentWrapper = document.getElementById('dialog-content-wrapper');
         const resultsContainer = document.getElementById('results-container');
         const resultsTableWrapper = document.getElementById('results-table-wrapper');
         const apiKeyInput = document.getElementById('api-key-input');
+        const rememberKeyCheckbox = document.getElementById('remember-key-checkbox');
+        const clearKeyBtn = document.getElementById('clear-key-btn');
         const propHeader = document.getElementById('prop-header');
         const roleHeader = document.getElementById('role-header');
         const datasetVersion = document.getElementById('dataset-version');
@@ -256,6 +267,7 @@
         let currentSort = { key: null, direction: 'ascending' };
         let lastQuery = {};
         let modalTriggerElement = null;
+        const AI_PROVIDER = 'openai';
 
         function validateDatasetShape(dataset) {
             if (!dataset || typeof dataset !== 'object') {
@@ -315,6 +327,14 @@
             const handleKeydownSort = (e, key) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortResults(key); } };
             propHeader.addEventListener('keydown', (e) => handleKeydownSort(e, 'prop'));
             roleHeader.addEventListener('keydown', (e) => handleKeydownSort(e, 'role'));
+            clearKeyBtn.addEventListener('click', clearSavedKeyAndInput);
+            rememberKeyCheckbox.addEventListener('change', () => {
+                if (!rememberKeyCheckbox.checked) {
+                    clearSavedKey();
+                } else if (apiKeyInput.value.trim()) {
+                    encryptApiKey(apiKeyInput.value.trim());
+                }
+            });
         });
 
         function handleFormSubmit() {
@@ -379,7 +399,38 @@
             return div.innerHTML;
         }
 
-        async function callGemini(prompt, triggerElement) {
+        async function callAI(prompt, triggerElement) {
+            if (AI_PROVIDER === 'openai') {
+                return callOpenAI(prompt, triggerElement);
+            }
+            throw new Error(`Unsupported AI provider: ${AI_PROVIDER}`);
+        }
+
+        function parseApiError(status, errorBody) {
+            const rawMessage = errorBody?.error?.message || '';
+            if (status === 401) return 'Invalid API key.';
+            if (status === 429) return 'Quota exceeded or rate limited.';
+            if (status === 403) return 'Access denied for this API key.';
+            if (status >= 500) return 'OpenAI service error. Please try again.';
+            return rawMessage || `API Error: ${status}`;
+        }
+
+        function extractOpenAIResponseText(result) {
+            if (typeof result?.output_text === 'string' && result.output_text.trim()) {
+                return result.output_text;
+            }
+            const chunks = [];
+            for (const outputItem of result?.output || []) {
+                for (const contentItem of outputItem?.content || []) {
+                    if (typeof contentItem?.text === 'string') {
+                        chunks.push(contentItem.text);
+                    }
+                }
+            }
+            return chunks.join('\n').trim();
+        }
+
+        async function callOpenAI(prompt, triggerElement) {
             modalTriggerElement = triggerElement;
             const originalButtonText = triggerElement.innerHTML;
             triggerElement.disabled = true;
@@ -388,35 +439,38 @@
             const apiKey = apiKeyInput.value || "";
 
             if (!apiKey) {
-                renderModalContent('API Key is missing. Please paste your Gemini API key in the input field at the top of the page to use this feature.');
+                renderModalContent('API Key is missing. Please paste your OpenAI API key in the input field at the top of the page to use this feature.');
                 modal.showModal();
                 triggerElement.disabled = false;
                 triggerElement.innerHTML = originalButtonText;
                 return;
             }
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiUrl = 'https://api.openai.com/v1/responses';
+            const payload = {
+                model: 'gpt-4.1-mini',
+                input: prompt
+            };
 
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
-                    const errorBody = await response.json();
+                    const errorBody = await response.json().catch(() => ({}));
                     console.error("API Error Response:", errorBody);
-                    const errorMsg = errorBody.error?.message || `API Error: ${response.status} ${response.statusText}`;
-                    throw new Error(errorMsg);
+                    throw new Error(parseApiError(response.status, errorBody));
                 }
 
                 const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
+                const text = extractOpenAIResponseText(result);
+                if (text) {
                     renderModalContent(text);
                     modal.showModal();
                 } else {
@@ -425,7 +479,7 @@
                 }
 
             } catch (error) {
-                console.error("Gemini API call failed:", error);
+                console.error("OpenAI API call failed:", error);
                 renderModalContent(`Sorry, an error occurred: ${error.message}`);
                 modal.showModal();
             } finally {
@@ -434,8 +488,8 @@
             }
         }
 
-        const STORAGE_KEY_DATA = 'gemini_api_key_enc';
-        const STORAGE_KEY_CRYPTO = 'gemini_crypto_key';
+        const STORAGE_KEY_DATA = 'openai_api_key_enc';
+        const STORAGE_KEY_CRYPTO = 'openai_crypto_key';
 
         async function getCryptoKey() {
             let keyJson = localStorage.getItem(STORAGE_KEY_CRYPTO);
@@ -467,6 +521,17 @@
             }
         }
 
+        function clearSavedKey() {
+            localStorage.removeItem(STORAGE_KEY_DATA);
+        }
+
+        function clearSavedKeyAndInput() {
+            clearSavedKey();
+            apiKeyInput.value = '';
+            rememberKeyCheckbox.checked = false;
+            apiKeyInput.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+        }
+
         async function decryptApiKey() {
             try {
                 const storedData = localStorage.getItem(STORAGE_KEY_DATA);
@@ -482,14 +547,23 @@
         }
 
         async function validateApiKey(apiKey) {
-            if (!apiKey) return false;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash?key=${apiKey}`;
+            if (!apiKey) return { valid: false, message: 'Missing API key.' };
+            const url = 'https://api.openai.com/v1/responses';
             try {
-                const response = await fetch(url);
-                return response.ok;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ model: 'gpt-4.1-mini', input: 'ping', max_output_tokens: 1 })
+                });
+                if (response.ok) return { valid: true, message: '' };
+                const errorBody = await response.json().catch(() => ({}));
+                return { valid: false, message: parseApiError(response.status, errorBody) };
             } catch (e) {
                 console.error("Validation check failed:", e);
-                return false;
+                return { valid: false, message: 'Network error while validating key.' };
             }
         }
 
@@ -497,20 +571,27 @@
         apiKeyInput.addEventListener('input', (e) => {
             const key = e.target.value.trim();
             apiKeyInput.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+            errorMessage.classList.add('hidden');
             clearTimeout(validationTimeout);
             validationTimeout = setTimeout(async () => {
                 if (key.length === 0) {
-                    localStorage.removeItem(STORAGE_KEY_DATA);
+                    clearSavedKey();
                     return;
                 }
                 apiKeyInput.classList.add('opacity-50');
-                const isValid = await validateApiKey(key);
+                const validation = await validateApiKey(key);
                 apiKeyInput.classList.remove('opacity-50');
-                if (isValid) {
+                if (validation.valid) {
                     apiKeyInput.classList.add('border-green-500', 'bg-green-50');
-                    await encryptApiKey(key);
+                    if (rememberKeyCheckbox.checked) {
+                        await encryptApiKey(key);
+                    } else {
+                        clearSavedKey();
+                    }
                 } else {
                     apiKeyInput.classList.add('border-red-500', 'bg-red-50');
+                    errorMessage.textContent = validation.message || 'API key validation failed.';
+                    errorMessage.classList.remove('hidden');
                 }
             }, 800);
         });
@@ -519,6 +600,7 @@
             const savedKey = await decryptApiKey();
             if (savedKey && !apiKeyInput.value) {
                 apiKeyInput.value = savedKey;
+                rememberKeyCheckbox.checked = true;
                 apiKeyInput.classList.add('border-green-500', 'bg-green-50');
             }
         })();
@@ -669,7 +751,7 @@
         function handleExplainClick(item, triggerElement) {
             const relationship = getRelationship(item);
             const prompt = `As a web accessibility expert, explain concisely why the WAI-ARIA property "${item.prop}" is **${relationship}** on the "${item.role}" role. Focus on the practical reason a web developer should know this.`;
-            callGemini(prompt, triggerElement);
+            callAI(prompt, triggerElement);
         }
 
         function handleSuggestImplementation(triggerElement) {
@@ -681,7 +763,7 @@
                 return;
             }
             const prompt = `Provide a simple, best-practice HTML code snippet demonstrating the use of the WAI-ARIA attribute "${selectedProp}" on an element with the role "${selectedRole}". Include a brief explanation of the code's accessibility purpose. Format the code block using HTML markdown.`;
-            callGemini(prompt, triggerElement);
+            callAI(prompt, triggerElement);
         }
 
         function renderResults(results, shouldFocusContainer = true) {
