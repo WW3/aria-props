@@ -556,7 +556,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify({ model: 'gpt-4.1-mini', input: 'ping', max_output_tokens: 1 })
+                    body: JSON.stringify({ model: 'gpt-4.1-mini', input: 'ping', max_output_tokens: 16 })
                 });
                 if (response.ok) return { valid: true, message: '' };
                 const errorBody = await response.json().catch(() => ({}));
