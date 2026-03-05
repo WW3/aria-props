@@ -1,0 +1,13 @@
+{
+  "name": "aria-props",
+  "private": true,
+  "version": "1.0.0",
+  "description": "WAI-ARIA property/role query tool",
+  "scripts": {
+    "verify": "node verify-aria13-alignment.js",
+    "check:dataset": "node scripts/validate-dataset-schema.js",
+    "test:smoke": "node --test tests/startup-failure-smoke.test.js",
+    "build:release": "node scripts/build-release.js",
+    "ci": "npm run check:dataset && npm run verify && npm run test:smoke && npm run build:release"
+  }
+}

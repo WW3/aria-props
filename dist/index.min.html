@@ -1,0 +1,679 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>WAI-ARIA 1.3 Query Tool</title><link rel="icon"
+ href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(0, 119, 219)'><title>Accessibility Icon</title><path d='M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-5v12c0 .55-.45 1-1 1s-1-.45-1-1v-5h-2v5c0 .55-.45 1-1 1s-1-.45-1-1v-5h-2v5c0 .55-.45 1-1 1s-1-.45-1-1V9H3V7h18v2z'/></svg>"><link rel="stylesheet" href="vendor/tailwind-2.2.19.min.css"><link rel="stylesheet" href="vendor/highlight-github-11.9.0.min.css">
+ <script src="vendor/highlight-11.9.0.min.js"></script>
+ <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        a:focus,
+        select:focus,
+        button:focus,
+        input:focus,
+        section:focus,
+        th[tabindex="0"]:focus,
+        h2[tabindex="-1"]:focus {
+            outline: 2px solid rgb(0 119 219);
+            outline-offset: 2px;
+            border-radius: 0.25rem;
+        }
+
+        dialog::backdrop {
+            background-color: rgba(17, 24, 39, 0.5);
+        }
+
+        .modal-content pre code {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: #111827;
+            display: block;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #4b5563;
+            border-bottom-color: #4f46e5;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head><body class="bg-gray-50 text-gray-800"><div class="container mx-auto p-4 sm:p-6 lg:p-8"><header class="mb-8"><h1 class="text-3xl font-bold text-gray-900">WAI-ARIA 1.3 Query Tool</h1><p id="dataset-version" class="mt-1 text-sm text-gray-500">Data version: loading...</p><p class="mt-2 text-lg text-gray-600">Select criteria to filter ARIA properties, then get AI-powered
+ explanations and code examples.</p><div role="status" class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg"><div class="flex"><div class="py-1"><svg class="h-6 w-6 text-yellow-500 mr-4" xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 20 20" fill="currentColor"><title>Attention</title><path fill-rule="evenodd"
+ d="M8.257 3.099c.636-1.214 2.313-1.214 2.95 0l5.515 10.53c.632 1.208-.282 2.62-1.64 2.62H4.382c-1.358 0-2.272-1.412-1.64-2.62l5.515-10.53zM9 9a1 1 0 011-1h.01a1 1 0 110 2H9a1 1 0 01-1-1zm1 4a1 1 0 100-2 1 1 0 000 2z"
+ clip-rule="evenodd" /></svg></div><div><p class="font-bold">Running Locally?</p><p class="text-sm">If you run this file on your computer, you must provide your own Gemini API
+ key below for the AI features to work.</p><div class="mt-2"><label for="api-key-input" class="sr-only">Gemini API Key</label><input type="password" id="api-key-input"
+ class="block w-full md:w-2/3 p-2 border border-gray-300 rounded-md shadow-sm"
+ placeholder="Paste your Gemini API key here"></div></div></div></div></header><main><div class="bg-white p-6 rounded-xl shadow-md mb-8"><form id="aria-query-form" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"><div class="flex flex-col"><label for="aria-prop" class="font-medium text-gray-700 mb-2">State/Property</label><select id="aria-prop"
+ class="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="">Any Property</option></select></div><div class="flex flex-col"><label for="prop-type" class="font-medium text-gray-700 mb-2">Property Type</label><select id="prop-type"
+ class="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="">Any Type</option><option value="rolesRequired">Required</option><option value="rolesSupported">Supported</option><option value="rolesInherited">Inherited</option><option value="rolesProhibited">Prohibited</option></select></div><div class="flex flex-col"><label for="aria-role" class="font-medium text-gray-700 mb-2">Role</label><select id="aria-role"
+ class="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></select></div><button type="submit"
+ class="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"><svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+ fill="currentColor" aria-hidden="true"><path fill-rule="evenodd"
+ d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+ clip-rule="evenodd" /></svg>
+ Find Results
+ </button></form><div id="error-message" role="alert" class="mt-4 text-red-600 font-medium hidden"></div><div id="live-feedback" role="alert"
+ class="mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg hidden"></div></div><section id="results-container" tabindex="-1" aria-labelledby="results-heading"
+ class="bg-white rounded-xl shadow-md overflow-hidden hidden"><div id="results-table-wrapper" class="overflow-x-auto" style="padding: 3px;"><table class="min-w-full"><caption class="p-6 text-left border-b border-gray-200"><div class="flex justify-between items-center"><div><div id="results-heading" class="text-2xl font-semibold text-gray-900">Results</div><p id="results-summary" class="mt-1 text-gray-600"></p></div><button id="suggest-implementation-btn"
+ class="hidden bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"><span aria-hidden="true">✨</span> Suggest HTML Implementation
+ </button></div></caption><thead class="bg-gray-50"><tr><th scope="col" id="prop-header" aria-sort="none" tabindex="0"
+ class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer group"><div class="flex items-center"><span>Property</span><span class="ml-2 sort-indicator"><svg class="h-4 w-4 text-gray-400 sort-none"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg><svg class="h-4 w-4 text-gray-600 hidden sort-asc"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M5 15l7-7 7 7" /></svg><svg class="h-4 w-4 text-gray-600 hidden sort-desc"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M19 9l-7 7-7-7" /></svg></span></div></th><th scope="col" id="role-header" aria-sort="none" tabindex="0"
+ class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer group"><div class="flex items-center"><span>Role</span><span class="ml-2 sort-indicator"><svg class="h-4 w-4 text-gray-400 sort-none"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg><svg class="h-4 w-4 text-gray-600 hidden sort-asc"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M5 15l7-7 7 7" /></svg><svg class="h-4 w-4 text-gray-600 hidden sort-desc"
+ xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+ stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M19 9l-7 7-7-7" /></svg></span></div></th><th scope="col"
+ class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+ Required</th><th scope="col"
+ class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+ Supported</th><th scope="col"
+ class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+ Inherited</th><th scope="col"
+ class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+ Prohibited</th><th scope="col"
+ class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+ Explanation</th></tr></thead><tbody id="results-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></section></main></div><dialog id="gemini-modal" aria-labelledby="modal-title"
+ class="p-5 border border-gray-300 w-full max-w-2xl shadow-lg rounded-md bg-white"><div id="dialog-content-wrapper" class="text-center"></div></dialog>
+ <script>
+        let ariaData = [];
+        let ariaRoles = [];
+        const propSelect = document.getElementById('aria-prop');
+        const typeSelect = document.getElementById('prop-type');
+        const roleSelect = document.getElementById('aria-role');
+        const form = document.getElementById('aria-query-form');
+        const resultsBody = document.getElementById('results-body');
+        const resultsSummary = document.getElementById('results-summary');
+        const errorMessage = document.getElementById('error-message');
+        const liveFeedback = document.getElementById('live-feedback');
+        const suggestBtn = document.getElementById('suggest-implementation-btn');
+        const modal = document.getElementById('gemini-modal');
+        const dialogContentWrapper = document.getElementById('dialog-content-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsTableWrapper = document.getElementById('results-table-wrapper');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const propHeader = document.getElementById('prop-header');
+        const roleHeader = document.getElementById('role-header');
+        const datasetVersion = document.getElementById('dataset-version');
+        let currentResults = [];
+        let currentSort = { key: null, direction: 'ascending' };
+        let lastQuery = {};
+        let modalTriggerElement = null;
+
+        function validateDatasetShape(dataset) {
+            if (!dataset || typeof dataset !== 'object') {
+                throw new Error('Dataset payload is missing.');
+            }
+            if (!Array.isArray(dataset.ariaData) || !Array.isArray(dataset.ariaRoles)) {
+                throw new Error('Dataset format is invalid.');
+            }
+            for (const item of dataset.ariaData) {
+                if (!item || typeof item !== 'object' || typeof item.prop !== 'string') {
+                    throw new Error('Dataset contains invalid property entries.');
+                }
+                for (const field of ['rolesRequired', 'rolesSupported', 'rolesInherited', 'rolesProhibited']) {
+                    if (!Array.isArray(item[field])) {
+                        throw new Error(`Dataset field "${field}" is invalid for ${item.prop}.`);
+                    }
+                }
+            }
+        }
+
+        async function loadAriaDataset() {
+            const response = await fetch('aria13-dataset.json', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Failed to load dataset: ${response.status} ${response.statusText}`);
+            }
+            const dataset = await response.json();
+            validateDatasetShape(dataset);
+            ariaData = dataset.ariaData;
+            ariaRoles = dataset.ariaRoles.slice().sort();
+            const generatedAt = dataset.generatedAt ? new Date(dataset.generatedAt) : null;
+            if (generatedAt && !Number.isNaN(generatedAt.getTime())) {
+                datasetVersion.textContent = `Data version: ${generatedAt.toISOString().slice(0, 10)}`;
+            } else {
+                datasetVersion.textContent = 'Data version: unknown';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadAriaDataset();
+            } catch (error) {
+                errorMessage.textContent = `Could not initialize ARIA dataset. ${error.message}`;
+                errorMessage.classList.remove('hidden');
+                datasetVersion.textContent = 'Data version: unavailable';
+                return;
+            }
+
+            populatePropSelect();
+            populateRoleSelect();
+            form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
+            window.addEventListener('hashchange', syncUiAndQueryFromUrl);
+            syncUiAndQueryFromUrl();
+            suggestBtn.addEventListener('click', (e) => handleSuggestImplementation(e.target));
+            modal.addEventListener('close', () => { if (modalTriggerElement) modalTriggerElement.focus(); });
+            propHeader.addEventListener('click', () => sortResults('prop'));
+            roleHeader.addEventListener('click', () => sortResults('role'));
+            const handleKeydownSort = (e, key) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortResults(key); } };
+            propHeader.addEventListener('keydown', (e) => handleKeydownSort(e, 'prop'));
+            roleHeader.addEventListener('keydown', (e) => handleKeydownSort(e, 'role'));
+        });
+
+        function handleFormSubmit() {
+            const selectedProp = propSelect.value;
+            const selectedType = typeSelect.value;
+            const selectedRole = roleSelect.value;
+            const selectionCount = [selectedProp, selectedType, selectedRole].filter(v => v && v !== 'all').length;
+            if (selectionCount < 1 && (selectedRole !== 'all' || selectedType === '')) {
+                errorMessage.textContent = 'Please select at least one criterion to perform a search.';
+                errorMessage.classList.remove('hidden');
+                propSelect.setAttribute('aria-describedby', 'error-message');
+                propSelect.focus();
+                return;
+            }
+            errorMessage.classList.add('hidden');
+            propSelect.removeAttribute('aria-describedby');
+            updateUrlFromForm();
+        }
+
+        function updateUrlFromForm() {
+            const params = new URLSearchParams();
+            if (propSelect.value) params.set('prop', propSelect.value);
+            if (typeSelect.value) params.set('type', typeSelect.value);
+            if (roleSelect.value && roleSelect.value !== 'all') params.set('role', roleSelect.value);
+            window.location.hash = params.toString();
+        }
+
+        function syncUiAndQueryFromUrl() {
+            const params = new URLSearchParams(window.location.hash.substring(1));
+            const prop = params.get('prop') || '';
+            const type = params.get('type') || '';
+            const role = params.get('role') || 'all';
+            propSelect.value = prop;
+            typeSelect.value = type;
+            roleSelect.value = role;
+            runQuery(prop, type, role);
+        }
+
+        function populatePropSelect() {
+            propSelect.innerHTML = '<option value="">Any Property</option>';
+            ariaData.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.prop;
+                option.textContent = item.prop;
+                propSelect.appendChild(option);
+            });
+        }
+
+        function populateRoleSelect() {
+            roleSelect.innerHTML = '<option value="all">All Roles</option>';
+            ariaRoles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role;
+                option.textContent = role;
+                roleSelect.appendChild(option);
+            });
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function callGemini(prompt, triggerElement) {
+            modalTriggerElement = triggerElement;
+            const originalButtonText = triggerElement.innerHTML;
+            triggerElement.disabled = true;
+            triggerElement.innerHTML = `<span class="loader" style="width: 16px; height: 16px; border-width: 2px;"></span> Loading...`;
+
+            const apiKey = apiKeyInput.value || "";
+
+            if (!apiKey) {
+                renderModalContent('API Key is missing. Please paste your Gemini API key in the input field at the top of the page to use this feature.');
+                modal.showModal();
+                triggerElement.disabled = false;
+                triggerElement.innerHTML = originalButtonText;
+                return;
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    console.error("API Error Response:", errorBody);
+                    const errorMsg = errorBody.error?.message || `API Error: ${response.status} ${response.statusText}`;
+                    throw new Error(errorMsg);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    renderModalContent(text);
+                    modal.showModal();
+                } else {
+                    console.warn("Unexpected API response structure:", result);
+                    throw new Error("No valid content received from API.");
+                }
+
+            } catch (error) {
+                console.error("Gemini API call failed:", error);
+                renderModalContent(`Sorry, an error occurred: ${error.message}`);
+                modal.showModal();
+            } finally {
+                triggerElement.disabled = false;
+                triggerElement.innerHTML = originalButtonText;
+            }
+        }
+
+        const STORAGE_KEY_DATA = 'gemini_api_key_enc';
+        const STORAGE_KEY_CRYPTO = 'gemini_crypto_key';
+
+        async function getCryptoKey() {
+            let keyJson = localStorage.getItem(STORAGE_KEY_CRYPTO);
+            if (keyJson) {
+                try {
+                    const jwk = JSON.parse(keyJson);
+                    return await window.crypto.subtle.importKey("jwk", jwk, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+                } catch (e) {
+                    console.warn("Failed to import stored key, generating new one.", e);
+                }
+            }
+            const key = await window.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+            const exported = await window.crypto.subtle.exportKey("jwk", key);
+            localStorage.setItem(STORAGE_KEY_CRYPTO, JSON.stringify(exported));
+            return key;
+        }
+
+        async function encryptApiKey(apiKey) {
+            try {
+                const key = await getCryptoKey();
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encoded = new TextEncoder().encode(apiKey);
+                const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, encoded);
+                const data = { iv: Array.from(iv), content: Array.from(new Uint8Array(encrypted)) };
+                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data));
+                console.log("API Key encrypted and saved.");
+            } catch (e) {
+                console.error("Encryption failed:", e);
+            }
+        }
+
+        async function decryptApiKey() {
+            try {
+                const storedData = localStorage.getItem(STORAGE_KEY_DATA);
+                if (!storedData) return null;
+                const { iv, content } = JSON.parse(storedData);
+                const key = await getCryptoKey();
+                const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(iv) }, key, new Uint8Array(content));
+                return new TextDecoder().decode(decrypted);
+            } catch (e) {
+                console.error("Decryption failed:", e);
+                return null;
+            }
+        }
+
+        async function validateApiKey(apiKey) {
+            if (!apiKey) return false;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash?key=${apiKey}`;
+            try {
+                const response = await fetch(url);
+                return response.ok;
+            } catch (e) {
+                console.error("Validation check failed:", e);
+                return false;
+            }
+        }
+
+        let validationTimeout;
+        apiKeyInput.addEventListener('input', (e) => {
+            const key = e.target.value.trim();
+            apiKeyInput.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+            clearTimeout(validationTimeout);
+            validationTimeout = setTimeout(async () => {
+                if (key.length === 0) {
+                    localStorage.removeItem(STORAGE_KEY_DATA);
+                    return;
+                }
+                apiKeyInput.classList.add('opacity-50');
+                const isValid = await validateApiKey(key);
+                apiKeyInput.classList.remove('opacity-50');
+                if (isValid) {
+                    apiKeyInput.classList.add('border-green-500', 'bg-green-50');
+                    await encryptApiKey(key);
+                } else {
+                    apiKeyInput.classList.add('border-red-500', 'bg-red-50');
+                }
+            }, 800);
+        });
+
+        (async () => {
+            const savedKey = await decryptApiKey();
+            if (savedKey && !apiKeyInput.value) {
+                apiKeyInput.value = savedKey;
+                apiKeyInput.classList.add('border-green-500', 'bg-green-50');
+            }
+        })();
+
+        function renderModalContent(text) {
+            let finalHtml = '';
+            const codeBlockRegex = /```html([\s\S]*?)```/;
+            const match = text.match(codeBlockRegex);
+
+            const processMarkdown = (str) => {
+                if (!str) return '';
+                const escaped = escapeHTML(str.trim());
+                return escaped
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-600 px-1 rounded">$1</code>')
+                    .replace(/\n/g, '<br>');
+            };
+
+            if (match) {
+                const beforeCode = text.substring(0, match.index);
+                const afterCode = text.substring(match.index + match[0].length);
+                const rawCode = match[1].trim();
+                const escapedCode = escapeHTML(rawCode);
+
+                finalHtml = `
+                    <p>${processMarkdown(beforeCode)}</p>
+                    <pre><code class="language-html">${escapedCode}</code></pre>
+                    <p>${processMarkdown(afterCode)}</p>
+                `;
+            } else {
+                finalHtml = `<p>${processMarkdown(text)}</p>`;
+            }
+
+            dialogContentWrapper.innerHTML = `
+                <h2 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">AI Assistant</h2>
+                <div class="mt-2 px-7 py-3">
+                    <div class="modal-content text-sm text-gray-700 text-left">${finalHtml}</div>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <form method="dialog">
+                        <button id="close-modal-btn" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600">
+                            Close
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            if (window.hljs) {
+                hljs.highlightAll();
+            }
+        }
+
+        function runQuery(selectedProp, selectedType, selectedRole) {
+            console.log('runQuery called with:', { selectedProp, selectedType, selectedRole });
+            liveFeedback.classList.add('hidden');
+            liveFeedback.textContent = '';
+            const selectionCount = [selectedProp, selectedType, selectedRole].filter(v => v && v !== 'all').length;
+            if (selectionCount < 1 && (selectedRole !== 'all' || selectedType === '')) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+            lastQuery = { selectedProp, selectedType, selectedRole };
+            let filteredData = ariaData;
+            if (selectedProp) {
+                filteredData = filteredData.filter(item => item.prop === selectedProp);
+            }
+            let results = [];
+            const rolesToSearch = selectedRole !== 'all' ? [selectedRole] : ariaRoles;
+            filteredData.forEach(propData => {
+                rolesToSearch.forEach(role => {
+                    const roleIsRequired = propData.rolesRequired.includes(role);
+                    const roleIsSupported = propData.rolesSupported.includes(role) || propData.rolesSupported.includes('All roles');
+                    const roleIsInherited = propData.rolesInherited.includes(role);
+                    const roleIsProhibited = propData.rolesProhibited.includes(role);
+                    let shouldInclude = false;
+                    if (selectedType) {
+                        if ((selectedType === 'rolesRequired' && roleIsRequired) || (selectedType === 'rolesSupported' && roleIsSupported) || (selectedType === 'rolesInherited' && roleIsInherited) || (selectedType === 'rolesProhibited' && roleIsProhibited)) {
+                            shouldInclude = true;
+                        }
+                    } else {
+                        if (roleIsRequired || roleIsSupported || roleIsInherited || roleIsProhibited) {
+                            shouldInclude = true;
+                        }
+                    }
+                    if (shouldInclude) {
+                        results.push({ prop: propData.prop, role, roleIsRequired, roleIsSupported, roleIsInherited, roleIsProhibited });
+                    }
+                });
+            });
+            currentResults = results;
+            currentSort = { key: null, direction: 'ascending' };
+            updateSortHeaders();
+            renderResults(currentResults, true);
+        }
+
+        function sortResults(key) {
+            const triggerElement = document.activeElement;
+            if (currentSort.key === key) {
+                currentSort.direction = currentSort.direction === 'ascending' ? 'descending' : 'ascending';
+            } else {
+                currentSort.key = key;
+                currentSort.direction = 'ascending';
+            }
+            currentResults.sort((a, b) => {
+                const valA = a[key].toLowerCase();
+                const valB = b[key].toLowerCase();
+                if (valA < valB) return currentSort.direction === 'ascending' ? -1 : 1;
+                if (valA > valB) return currentSort.direction === 'ascending' ? 1 : -1;
+                return 0;
+            });
+            updateSortHeaders();
+            renderResults(currentResults, false);
+            if (triggerElement) triggerElement.focus();
+        }
+
+        function updateSortHeaders() {
+            const headers = [propHeader, roleHeader];
+            headers.forEach(header => {
+                const key = header.id === 'prop-header' ? 'prop' : 'role';
+                const sortNone = header.querySelector('.sort-none');
+                const sortAsc = header.querySelector('.sort-asc');
+                const sortDesc = header.querySelector('.sort-desc');
+                sortNone.classList.add('hidden');
+                sortAsc.classList.add('hidden');
+                sortDesc.classList.add('hidden');
+                if (key === currentSort.key) {
+                    header.setAttribute('aria-sort', currentSort.direction);
+                    if (currentSort.direction === 'ascending') {
+                        sortAsc.classList.remove('hidden');
+                    } else {
+                        sortDesc.classList.remove('hidden');
+                    }
+                } else {
+                    header.setAttribute('aria-sort', 'none');
+                    sortNone.classList.remove('hidden');
+                }
+            });
+        }
+
+        function getRelationship(item) {
+            if (item.roleIsRequired) return 'required';
+            if (item.roleIsSupported) return 'supported';
+            if (item.roleIsInherited) return 'inherited';
+            if (item.roleIsProhibited) return 'prohibited';
+            return 'related';
+        }
+
+        function handleExplainClick(item, triggerElement) {
+            const relationship = getRelationship(item);
+            const prompt = `As a web accessibility expert, explain concisely why the WAI-ARIA property "${item.prop}" is **${relationship}** on the "${item.role}" role. Focus on the practical reason a web developer should know this.`;
+            callGemini(prompt, triggerElement);
+        }
+
+        function handleSuggestImplementation(triggerElement) {
+            const { selectedProp, selectedRole } = lastQuery;
+            if (!selectedProp || !selectedRole || selectedRole === 'all') {
+                modalTriggerElement = triggerElement;
+                renderModalContent('Please select a specific Property and a specific Role in your query to get an HTML suggestion.');
+                modal.showModal();
+                return;
+            }
+            const prompt = `Provide a simple, best-practice HTML code snippet demonstrating the use of the WAI-ARIA attribute "${selectedProp}" on an element with the role "${selectedRole}". Include a brief explanation of the code's accessibility purpose. Format the code block using HTML markdown.`;
+            callGemini(prompt, triggerElement);
+        }
+
+        function renderResults(results, shouldFocusContainer = true) {
+            resultsBody.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsContainer.classList.add('hidden');
+                liveFeedback.classList.remove('hidden');
+                // Use setTimeout to ensure screen readers announce the change every time
+                liveFeedback.textContent = '';
+                setTimeout(() => {
+                    liveFeedback.textContent = 'No matches found.';
+                }, 1);
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+            resultsTableWrapper.classList.remove('hidden');
+            resultsSummary.textContent = `Displaying ${results.length} result(s).`;
+            if (lastQuery.selectedProp && lastQuery.selectedRole && lastQuery.selectedRole !== 'all') {
+                suggestBtn.classList.remove('hidden');
+            } else {
+                suggestBtn.classList.add('hidden');
+            }
+
+            // Helper function to create external link SVG icon
+            const createExternalLinkIcon = () => {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'inline-block w-4 h-4 ml-1');
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('stroke', 'currentColor');
+                svg.setAttribute('viewBox', '0 0 24 24');
+                svg.setAttribute('role', 'img');
+                svg.setAttribute('aria-label', 'opens in a new tab');
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('stroke', '#2563eb'); // Explicit blue color
+                path.setAttribute('d', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3');
+
+                svg.appendChild(path);
+                return svg;
+            };
+
+            results.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-150';
+
+                const createBoolCell = (value) => {
+                    const cell = document.createElement('td');
+                    cell.className = 'px-6 py-4 whitespace-nowrap text-center';
+
+                    const trueIcon = `<svg class="w-6 h-6 text-green-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="True"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                    const falseIcon = `<svg class="w-6 h-6 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="False"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+
+                    cell.innerHTML = value ? trueIcon : falseIcon;
+                    return cell;
+                };
+
+                const propUrl = `https://www.w3.org/TR/wai-aria-1.3/#${item.prop}`;
+                const roleUrl = `https://www.w3.org/TR/wai-aria-1.3/#${item.role}`;
+
+                // Generate unique ID for the property link
+                const propLinkId = `prop-link-${item.prop}-${item.role}-${index}`;
+
+                // Create prop cell with link and icon
+                const propCell = document.createElement('td');
+                propCell.className = 'px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-800';
+                const propLink = document.createElement('a');
+                propLink.id = propLinkId;
+                propLink.href = propUrl;
+                propLink.target = '_blank';
+                propLink.rel = 'noopener noreferrer';
+                propLink.className = 'underline text-blue-600 hover:text-blue-800';
+                propLink.textContent = item.prop;
+                propLink.appendChild(document.createTextNode(' '));
+                propLink.appendChild(createExternalLinkIcon());
+                propCell.appendChild(propLink);
+                row.appendChild(propCell);
+
+                // Create role cell with link and icon
+                const roleCell = document.createElement('td');
+                roleCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800';
+                const roleLink = document.createElement('a');
+                roleLink.href = roleUrl;
+                roleLink.target = '_blank';
+                roleLink.rel = 'noopener noreferrer';
+                roleLink.className = 'underline text-blue-600 hover:text-blue-800';
+                roleLink.textContent = item.role;
+                roleLink.appendChild(document.createTextNode(' '));
+                roleLink.appendChild(createExternalLinkIcon());
+                roleCell.appendChild(roleLink);
+                row.appendChild(roleCell);
+
+                row.appendChild(createBoolCell(item.roleIsRequired));
+                row.appendChild(createBoolCell(item.roleIsSupported));
+                row.appendChild(createBoolCell(item.roleIsInherited));
+                row.appendChild(createBoolCell(item.roleIsProhibited));
+
+                const explainCell = document.createElement('td');
+                explainCell.className = 'px-6 py-4 whitespace-nowrap text-center';
+                const explainButton = document.createElement('button');
+                explainButton.type = 'button';
+                explainButton.setAttribute('aria-haspopup', 'dialog');
+                explainButton.setAttribute('aria-describedby', propLinkId);
+                explainButton.innerHTML = `<span aria-hidden="true">✨</span>&nbsp;Explain`;
+                explainButton.className = 'bg-gray-200 text-gray-800 text-xs font-bold py-1 px-3 rounded-full hover:bg-gray-300 transition';
+                explainButton.onclick = (e) => handleExplainClick(item, e.target);
+                explainCell.appendChild(explainButton);
+                row.appendChild(explainCell);
+
+                resultsBody.appendChild(row);
+            });
+
+            if (shouldFocusContainer) {
+                resultsContainer.focus();
+            }
+        }
+    </script>
+</body></html>

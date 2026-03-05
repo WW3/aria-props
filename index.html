@@ -7,13 +7,12 @@
     <title>WAI-ARIA 1.3 Query Tool</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(0, 119, 219)'><title>Accessibility Icon</title><path d='M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-5v12c0 .55-.45 1-1 1s-1-.45-1-1v-5h-2v5c0 .55-.45 1-1 1s-1-.45-1-1v-5h-2v5c0 .55-.45 1-1 1s-1-.45-1-1V9H3V7h18v2z'/></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="vendor/tailwind-2.2.19.min.css">
+    <link rel="stylesheet" href="vendor/highlight-github-11.9.0.min.css">
+    <script src="vendor/highlight-11.9.0.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
 
         a:focus,
@@ -69,6 +68,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">WAI-ARIA 1.3 Query Tool</h1>
+            <p id="dataset-version" class="mt-1 text-sm text-gray-500">Data version: loading...</p>
             <p class="mt-2 text-lg text-gray-600">Select criteria to filter ARIA properties, then get AI-powered
                 explanations and code examples.</p>
             <div role="status" class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
@@ -233,167 +233,8 @@
         <div id="dialog-content-wrapper" class="text-center"></div>
     </dialog>
     <script>
-        const ariaData = [
-            // aria-activedescendant - Composite widget focus management
-            { prop: 'aria-activedescendant', valueType: 'ID reference', isGlobal: false, rolesRequired: [], rolesSupported: ['application', 'composite', 'group', 'textbox'], rolesInherited: ['combobox', 'grid', 'listbox', 'menu', 'menubar', 'radiogroup', 'row', 'searchbox', 'select', 'table', 'tablist', 'toolbar', 'tree', 'treegrid'], rolesProhibited: [] },
-
-            // aria-atomic - Global live region property
-            { prop: 'aria-atomic', valueType: 'boolean', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-autocomplete - Input completion behavior
-            { prop: 'aria-autocomplete', valueType: 'token', isGlobal: false, rolesRequired: [], rolesSupported: ['combobox', 'textbox'], rolesInherited: ['searchbox'], rolesProhibited: [] },
-
-            // aria-braillelabel - Braille-specific label
-            { prop: 'aria-braillelabel', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-brailleroledescription - Braille-specific role description
-            { prop: 'aria-brailleroledescription', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-busy - Loading/updating state
-            { prop: 'aria-busy', valueType: 'boolean', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-checked - Checkable widget state
-            { prop: 'aria-checked', valueType: 'tristate', isGlobal: false, rolesRequired: [], rolesSupported: ['checkbox', 'option', 'radio', 'switch'], rolesInherited: ['menuitemcheckbox', 'menuitemradio', 'treeitem'], rolesProhibited: [] },
-
-            // aria-colcount - Total columns in table/grid
-            { prop: 'aria-colcount', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['table'], rolesInherited: ['grid', 'treegrid'], rolesProhibited: [] },
-
-            // aria-colindex - Column index of cell/row
-            { prop: 'aria-colindex', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['cell', 'row'], rolesInherited: ['columnheader', 'gridcell', 'rowheader'], rolesProhibited: [] },
-
-            // aria-colindextext - Human-readable column index
-            { prop: 'aria-colindextext', valueType: 'string', isGlobal: false, rolesRequired: [], rolesSupported: ['cell', 'row'], rolesInherited: ['columnheader', 'gridcell', 'rowheader'], rolesProhibited: [] },
-
-            // aria-colspan - Number of columns spanned by cell
-            { prop: 'aria-colspan', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['cell'], rolesInherited: ['columnheader', 'gridcell', 'rowheader'], rolesProhibited: [] },
-
-            // aria-controls - Related controlled elements
-            { prop: 'aria-controls', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-current - Current item in a set
-            { prop: 'aria-current', valueType: 'token', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-describedby - Descriptive element references
-            { prop: 'aria-describedby', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-description - Accessible description
-            { prop: 'aria-description', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: ['generic'] },
-
-            // aria-details - Detailed description references
-            { prop: 'aria-details', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-disabled - Disabled state (global, deprecated for global use in 1.2)
-            { prop: 'aria-disabled', valueType: 'boolean', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-dropeffect - Drag-and-drop effect (deprecated in ARIA 1.1)
-            { prop: 'aria-dropeffect', valueType: 'token list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-errormessage - Error message reference (global, deprecated for global use in 1.2)
-            { prop: 'aria-errormessage', valueType: 'ID reference', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-expanded - Expandable/collapsible state
-            { prop: 'aria-expanded', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['application', 'button', 'checkbox', 'combobox', 'gridcell', 'link', 'listbox', 'menuitem', 'row', 'rowheader', 'tab', 'treeitem'], rolesInherited: ['columnheader', 'menuitemcheckbox', 'menuitemradio', 'switch'], rolesProhibited: [] },
-
-            // aria-flowto - Reading order flow references
-            { prop: 'aria-flowto', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-grabbed - Drag state (deprecated in ARIA 1.1)
-            { prop: 'aria-grabbed', valueType: 'boolean', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-haspopup - Popup trigger indicator (global, deprecated for global use in 1.2)
-            { prop: 'aria-haspopup', valueType: 'token', isGlobal: true, rolesRequired: [], rolesSupported: ['application', 'button', 'combobox', 'gridcell', 'link', 'menuitem', 'slider', 'tab', 'textbox', 'treeitem'], rolesInherited: ['columnheader', 'menuitemcheckbox', 'menuitemradio', 'rowheader', 'searchbox'], rolesProhibited: [] },
-
-            // aria-hidden - Accessibility tree visibility
-            { prop: 'aria-hidden', valueType: 'boolean', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-invalid - Input validation state (global, deprecated for global use in 1.2)
-            { prop: 'aria-invalid', valueType: 'token', isGlobal: true, rolesRequired: [], rolesSupported: ['application', 'checkbox', 'combobox', 'gridcell', 'listbox', 'radiogroup', 'slider', 'spinbutton', 'textbox', 'tree'], rolesInherited: ['columnheader', 'rowheader', 'searchbox', 'switch', 'treegrid'], rolesProhibited: [] },
-
-            // aria-keyshortcuts - Keyboard shortcut documentation
-            { prop: 'aria-keyshortcuts', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-label - Accessible label
-            { prop: 'aria-label', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: ['generic'] },
-
-            // aria-labelledby - Label element references
-            { prop: 'aria-labelledby', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: ['generic'] },
-
-            // aria-level - Hierarchical level
-            { prop: 'aria-level', valueType: 'integer', isGlobal: false, rolesRequired: ['heading'], rolesSupported: ['heading', 'listitem', 'row', 'treeitem'], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-live - Live region politeness
-            { prop: 'aria-live', valueType: 'token', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-modal - Modal dialog indicator
-            { prop: 'aria-modal', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['window'], rolesInherited: ['dialog', 'alertdialog'], rolesProhibited: [] },
-
-            // aria-multiline - Multi-line textbox
-            { prop: 'aria-multiline', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['textbox'], rolesInherited: ['searchbox'], rolesProhibited: [] },
-
-            // aria-multiselectable - Multiple selection capability
-            { prop: 'aria-multiselectable', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['grid', 'listbox', 'tablist', 'tree'], rolesInherited: ['treegrid'], rolesProhibited: [] },
-
-            // aria-orientation - Widget orientation
-            { prop: 'aria-orientation', valueType: 'token', isGlobal: false, rolesRequired: [], rolesSupported: ['scrollbar', 'select', 'separator', 'slider', 'tablist', 'toolbar'], rolesInherited: ['listbox', 'menu', 'menubar', 'radiogroup', 'tree'], rolesProhibited: [] },
-
-            // aria-owns - Ownership relationship
-            { prop: 'aria-owns', valueType: 'ID reference list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-placeholder - Placeholder hint
-            { prop: 'aria-placeholder', valueType: 'string', isGlobal: false, rolesRequired: [], rolesSupported: ['textbox'], rolesInherited: ['combobox', 'searchbox'], rolesProhibited: [] },
-
-            // aria-posinset - Position in set
-            { prop: 'aria-posinset', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['article', 'listitem', 'menuitem', 'option', 'radio', 'row', 'tab', 'treeitem'], rolesInherited: ['menuitemcheckbox', 'menuitemradio'], rolesProhibited: [] },
-
-            // aria-pressed - Toggle button state
-            { prop: 'aria-pressed', valueType: 'tristate', isGlobal: false, rolesRequired: [], rolesSupported: ['button'], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-readonly - Read-only input state
-            { prop: 'aria-readonly', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['checkbox', 'combobox', 'grid', 'gridcell', 'listbox', 'radiogroup', 'slider', 'spinbutton', 'textbox'], rolesInherited: ['columnheader', 'rowheader', 'searchbox', 'switch'], rolesProhibited: [] },
-
-            // aria-relevant - Live region change types
-            { prop: 'aria-relevant', valueType: 'token list', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-required - Required field indicator
-            { prop: 'aria-required', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['checkbox', 'combobox', 'gridcell', 'listbox', 'radiogroup', 'spinbutton', 'textbox', 'tree'], rolesInherited: ['columnheader', 'rowheader', 'searchbox', 'switch'], rolesProhibited: [] },
-
-            // aria-roledescription - Human-readable role description
-            { prop: 'aria-roledescription', valueType: 'string', isGlobal: true, rolesRequired: [], rolesSupported: [], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-rowcount - Total rows in table/grid
-            { prop: 'aria-rowcount', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['table'], rolesInherited: ['grid', 'treegrid'], rolesProhibited: [] },
-
-            // aria-rowindex - Row index of cell/row
-            { prop: 'aria-rowindex', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['cell', 'row'], rolesInherited: ['columnheader', 'gridcell', 'rowheader'], rolesProhibited: [] },
-
-            // aria-rowindextext - Human-readable row index
-            { prop: 'aria-rowindextext', valueType: 'string', isGlobal: false, rolesRequired: [], rolesSupported: ['cell', 'row'], rolesInherited: ['columnheader', 'gridcell', 'rowheader', 'treeitem'], rolesProhibited: [] },
-
-            // aria-rowspan - Number of rows spanned by cell
-            { prop: 'aria-rowspan', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['cell'], rolesInherited: ['columnheader', 'gridcell', 'rowheader'], rolesProhibited: [] },
-
-            // aria-selected - Selection state
-            { prop: 'aria-selected', valueType: 'boolean', isGlobal: false, rolesRequired: [], rolesSupported: ['gridcell', 'option', 'row', 'tab'], rolesInherited: ['columnheader', 'listitem', 'rowheader', 'treeitem'], rolesProhibited: [] },
-
-            // aria-setsize - Set size
-            { prop: 'aria-setsize', valueType: 'integer', isGlobal: false, rolesRequired: [], rolesSupported: ['article', 'listitem', 'menuitem', 'option', 'radio', 'row', 'tab', 'treeitem'], rolesInherited: ['menuitemcheckbox', 'menuitemradio'], rolesProhibited: [] },
-
-            // aria-sort - Sort direction
-            { prop: 'aria-sort', valueType: 'token', isGlobal: false, rolesRequired: [], rolesSupported: ['columnheader', 'rowheader'], rolesInherited: [], rolesProhibited: [] },
-
-            // aria-valuemax - Maximum value
-            { prop: 'aria-valuemax', valueType: 'number', isGlobal: false, rolesRequired: ['scrollbar', 'slider', 'spinbutton'], rolesSupported: ['meter', 'progressbar', 'scrollbar', 'slider', 'spinbutton'], rolesInherited: ['separator'], rolesProhibited: [] },
-
-            // aria-valuemin - Minimum value
-            { prop: 'aria-valuemin', valueType: 'number', isGlobal: false, rolesRequired: [], rolesSupported: ['meter', 'progressbar', 'scrollbar', 'slider', 'spinbutton'], rolesInherited: ['separator'], rolesProhibited: [] },
-
-            // aria-valuenow - Current value
-            { prop: 'aria-valuenow', valueType: 'number', isGlobal: false, rolesRequired: ['scrollbar', 'slider', 'spinbutton'], rolesSupported: ['meter', 'progressbar', 'scrollbar', 'slider', 'spinbutton'], rolesInherited: ['separator'], rolesProhibited: [] },
-
-            // aria-valuetext - Human-readable value
-            { prop: 'aria-valuetext', valueType: 'string', isGlobal: false, rolesRequired: [], rolesSupported: ['scrollbar', 'slider', 'spinbutton'], rolesInherited: ['meter', 'progressbar', 'separator'], rolesProhibited: [] },
-        ];
-        const ariaRoles = ['alert', 'alertdialog', 'application', 'article', 'banner', 'button', 'cell', 'checkbox', 'columnheader', 'combobox', 'complementary', 'contentinfo', 'definition', 'dialog', 'directory', 'document', 'feed', 'figure', 'form', 'generic', 'grid', 'gridcell', 'group', 'heading', 'img', 'link', 'list', 'listbox', 'listitem', 'log', 'main', 'marquee', 'math', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'meter', 'navigation', 'none', 'note', 'option', 'presentation', 'progressbar', 'radio', 'radiogroup', 'region', 'row', 'rowgroup', 'rowheader', 'scrollbar', 'search', 'searchbox', 'separator', 'slider', 'spinbutton', 'status', 'switch', 'tab', 'table', 'tablist', 'tabpanel', 'term', 'textbox', 'timer', 'toolbar', 'tooltip', 'tree', 'treegrid', 'treeitem', 'window'].sort();
+        let ariaData = [];
+        let ariaRoles = [];
         const propSelect = document.getElementById('aria-prop');
         const typeSelect = document.getElementById('prop-type');
         const roleSelect = document.getElementById('aria-role');
@@ -410,12 +251,58 @@
         const apiKeyInput = document.getElementById('api-key-input');
         const propHeader = document.getElementById('prop-header');
         const roleHeader = document.getElementById('role-header');
+        const datasetVersion = document.getElementById('dataset-version');
         let currentResults = [];
         let currentSort = { key: null, direction: 'ascending' };
         let lastQuery = {};
         let modalTriggerElement = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function validateDatasetShape(dataset) {
+            if (!dataset || typeof dataset !== 'object') {
+                throw new Error('Dataset payload is missing.');
+            }
+            if (!Array.isArray(dataset.ariaData) || !Array.isArray(dataset.ariaRoles)) {
+                throw new Error('Dataset format is invalid.');
+            }
+            for (const item of dataset.ariaData) {
+                if (!item || typeof item !== 'object' || typeof item.prop !== 'string') {
+                    throw new Error('Dataset contains invalid property entries.');
+                }
+                for (const field of ['rolesRequired', 'rolesSupported', 'rolesInherited', 'rolesProhibited']) {
+                    if (!Array.isArray(item[field])) {
+                        throw new Error(`Dataset field "${field}" is invalid for ${item.prop}.`);
+                    }
+                }
+            }
+        }
+
+        async function loadAriaDataset() {
+            const response = await fetch('aria13-dataset.json', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Failed to load dataset: ${response.status} ${response.statusText}`);
+            }
+            const dataset = await response.json();
+            validateDatasetShape(dataset);
+            ariaData = dataset.ariaData;
+            ariaRoles = dataset.ariaRoles.slice().sort();
+            const generatedAt = dataset.generatedAt ? new Date(dataset.generatedAt) : null;
+            if (generatedAt && !Number.isNaN(generatedAt.getTime())) {
+                datasetVersion.textContent = `Data version: ${generatedAt.toISOString().slice(0, 10)}`;
+            } else {
+                datasetVersion.textContent = 'Data version: unknown';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadAriaDataset();
+            } catch (error) {
+                errorMessage.textContent = `Could not initialize ARIA dataset. ${error.message}`;
+                errorMessage.classList.remove('hidden');
+                datasetVersion.textContent = 'Data version: unavailable';
+                return;
+            }
+
             populatePropSelect();
             populateRoleSelect();
             form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
@@ -467,6 +354,7 @@
         }
 
         function populatePropSelect() {
+            propSelect.innerHTML = '<option value="">Any Property</option>';
             ariaData.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.prop;
@@ -500,7 +388,7 @@
             const apiKey = apiKeyInput.value || "";
 
             if (!apiKey) {
-                renderModalContent(`<p class="text-red-500 font-semibold">API Key is missing. Please paste your Gemini API key in the input field at the top of the page to use this feature.</p>`);
+                renderModalContent('API Key is missing. Please paste your Gemini API key in the input field at the top of the page to use this feature.');
                 modal.showModal();
                 triggerElement.disabled = false;
                 triggerElement.innerHTML = originalButtonText;
@@ -538,7 +426,7 @@
 
             } catch (error) {
                 console.error("Gemini API call failed:", error);
-                renderModalContent(`<p class="text-red-500 font-semibold">Sorry, an error occurred: ${error.message}</p>`);
+                renderModalContent(`Sorry, an error occurred: ${error.message}`);
                 modal.showModal();
             } finally {
                 triggerElement.disabled = false;
@@ -642,7 +530,8 @@
 
             const processMarkdown = (str) => {
                 if (!str) return '';
-                return str.trim()
+                const escaped = escapeHTML(str.trim());
+                return escaped
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-600 px-1 rounded">$1</code>')
                     .replace(/\n/g, '<br>');
@@ -677,7 +566,9 @@
                 </div>
             `;
 
-            hljs.highlightAll();
+            if (window.hljs) {
+                hljs.highlightAll();
+            }
         }
 
         function runQuery(selectedProp, selectedType, selectedRole) {
@@ -785,7 +676,7 @@
             const { selectedProp, selectedRole } = lastQuery;
             if (!selectedProp || !selectedRole || selectedRole === 'all') {
                 modalTriggerElement = triggerElement;
-                renderModalContent("<p>Please select a specific Property and a specific Role in your query to get an HTML suggestion.</p>");
+                renderModalContent('Please select a specific Property and a specific Role in your query to get an HTML suggestion.');
                 modal.showModal();
                 return;
             }
