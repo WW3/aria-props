@@ -320,7 +320,7 @@
             form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
             window.addEventListener('hashchange', syncUiAndQueryFromUrl);
             syncUiAndQueryFromUrl();
-            suggestBtn.addEventListener('click', (e) => handleSuggestImplementation(e.target));
+            suggestBtn.addEventListener('click', (e) => handleSuggestImplementation(e.currentTarget));
             modal.addEventListener('close', () => { if (modalTriggerElement) modalTriggerElement.focus(); });
             propHeader.addEventListener('click', () => sortResults('prop'));
             roleHeader.addEventListener('click', () => sortResults('role'));
@@ -873,7 +873,7 @@
                 explainButton.setAttribute('aria-describedby', propLinkId);
                 explainButton.innerHTML = `<span aria-hidden="true">✨</span>&nbsp;Explain`;
                 explainButton.className = 'bg-gray-200 text-gray-800 text-xs font-bold py-1 px-3 rounded-full hover:bg-gray-300 transition';
-                explainButton.onclick = (e) => handleExplainClick(item, e.target);
+                explainButton.onclick = (e) => handleExplainClick(item, e.currentTarget);
                 explainCell.appendChild(explainButton);
                 row.appendChild(explainCell);
 
