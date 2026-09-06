@@ -1,13 +1,15 @@
 name: update-dataset
 
 # Regenerate data/aria-dataset.json from the W3C-REFS corpus and open a PR when it changed.
-# W3C-REFS is synced from w3c/aria every Monday 06:00 UTC, so this runs a few hours later.
 # Requires a repository secret W3C_REFS_TOKEN with read access to GetEvinced/W3C-REFS
-# (a fine-grained PAT with "Contents: read" is enough).
+# (a fine-grained PAT, resource owner GetEvinced, "Contents: read"; the org must approve it).
+#
+# Manual-only until that token is approved. To run weekly again, add:
+#   schedule:
+#     - cron: "0 10 * * 1"   # Mondays, a few hours after W3C-REFS's own 06:00 UTC sync
+# The no-secret alternative is `npm run data:build` against a local W3C-REFS checkout.
 
 on:
-  schedule:
-    - cron: "0 10 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -20,10 +22,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Checkout W3C-REFS corpus
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: GetEvinced/W3C-REFS
           token: ${{ secrets.W3C_REFS_TOKEN }}
@@ -32,7 +34,7 @@ jobs:
             data/aria13
           sparse-checkout-cone-mode: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -51,7 +53,7 @@ jobs:
           echo "commit=$(node -p "require('./data/aria-dataset.json').spec.upstreamCommit.slice(0,8)")" >> "$GITHUB_OUTPUT"
 
       - name: Open pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           add-paths: data/aria-dataset.json
           commit-message: "data: sync WAI-ARIA 1.3 dataset (upstream ${{ steps.meta.outputs.updated }}, ${{ steps.meta.outputs.commit }})"

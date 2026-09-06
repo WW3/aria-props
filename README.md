@@ -28,8 +28,19 @@ Relations are taken from the **role** atoms (`required_/supported_/inherited_/pr
 per-role deprecation markers and the global list are parsed from the atom bodies. See [PLAN.md](PLAN.md) for the schema
 and the reasoning.
 
-`update-dataset.yml` regenerates the file every Monday and opens a PR; it needs a `W3C_REFS_TOKEN` secret with read
-access to the corpus repository.
+**Refreshing the data.** W3C-REFS syncs from w3c/aria every Monday. When it has changed, from this repo:
+
+```bash
+npm run data:build
+npm run ci
+git add data/aria-dataset.json
+git commit -m "data: sync WAI-ARIA 1.3 dataset"
+```
+
+Pushing to `main` redeploys the site. `update-dataset.yml` does the same on GitHub and opens a PR, but it is
+manual-only (`workflow_dispatch`) because it needs a `W3C_REFS_TOKEN` secret that can read the private corpus
+repository; a fine-grained token there has to be approved by the GetEvinced org. Re-enable the schedule in the
+workflow file once that token works.
 
 ## Develop
 
