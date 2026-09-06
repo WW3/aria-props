@@ -1,0 +1,65 @@
+name: update-dataset
+
+# Regenerate data/aria-dataset.json from the W3C-REFS corpus and open a PR when it changed.
+# W3C-REFS is synced from w3c/aria every Monday 06:00 UTC, so this runs a few hours later.
+# Requires a repository secret W3C_REFS_TOKEN with read access to GetEvinced/W3C-REFS
+# (a fine-grained PAT with "Contents: read" is enough).
+
+on:
+  schedule:
+    - cron: "0 10 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency: aria-props-update-dataset
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout W3C-REFS corpus
+        uses: actions/checkout@v4
+        with:
+          repository: GetEvinced/W3C-REFS
+          token: ${{ secrets.W3C_REFS_TOKEN }}
+          path: .w3c-refs
+          sparse-checkout: |
+            data/aria13
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Regenerate dataset
+        run: npm run data:build -- --refs .w3c-refs
+
+      - name: Validate
+        run: npm run data:check
+
+      - name: Summarize upstream version
+        id: meta
+        run: |
+          echo "updated=$(node -p "require('./data/aria-dataset.json').spec.upstreamUpdated")" >> "$GITHUB_OUTPUT"
+          echo "commit=$(node -p "require('./data/aria-dataset.json').spec.upstreamCommit.slice(0,8)")" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: data/aria-dataset.json
+          commit-message: "data: sync WAI-ARIA 1.3 dataset (upstream ${{ steps.meta.outputs.updated }}, ${{ steps.meta.outputs.commit }})"
+          branch: bot/update-dataset
+          delete-branch: true
+          title: "Update WAI-ARIA dataset (upstream ${{ steps.meta.outputs.updated }})"
+          body: |
+            Regenerated `data/aria-dataset.json` from the W3C-REFS corpus.
+
+            - Upstream w3c/aria: `${{ steps.meta.outputs.commit }}` (${{ steps.meta.outputs.updated }})
+            - Review the diff for renamed roles/attributes before merging: those are breaking for shared links.

@@ -1,13 +1,29 @@
 {
   "name": "aria-props",
   "private": true,
-  "version": "1.0.0",
-  "description": "WAI-ARIA property/role query tool",
+  "version": "2.0.0",
+  "description": "WAI-ARIA 1.3 role / state / property query tool, data-driven from the W3C-REFS corpus",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "verify": "node verify-aria13-alignment.js",
-    "check:dataset": "node scripts/validate-dataset-schema.js",
-    "test:smoke": "node --test tests/startup-failure-smoke.test.js",
-    "build:release": "node scripts/build-release.js",
-    "ci": "npm run check:dataset && npm run verify && npm run test:smoke && npm run build:release"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "data:build": "node scripts/build-dataset.mjs",
+    "data:check": "node scripts/validate-dataset.mjs",
+    "data:diff": "node scripts/build-dataset.mjs --check",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "ci": "npm run data:check && npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.0.0",
+    "vitest": "^3.0.0",
+    "yaml": "^2.6.0"
   }
 }
