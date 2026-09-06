@@ -5,8 +5,10 @@
  *   node scripts/build-dataset.mjs [--refs <dir>] [--out <file>] [--check]
  *
  * Source of truth: role atoms in <refs>/data/aria13/roles/*.md (characteristics tables lifted into
- * YAML frontmatter). Attribute atoms provide kind/value/description. The spec's "Global States and
- * Properties" list is read from the states_and_properties concept atom.
+ * YAML frontmatter, including `deprecated_states_and_properties`). Attribute atoms provide
+ * kind/value/description and `used_in_roles` / `used_in_roles_except`. The spec's "Global States and
+ * Properties" list is read from the states_and_properties concept atom for the "global use
+ * deprecated" notes. Requires W3C-REFS at or after commit 07c6e0f (characteristics parser fix).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -43,7 +45,11 @@ export function buildDataset(refsDir, gates = {}) {
     roles,
     attributes,
   };
-  gate(dataset, roleNames, attributeNames, limits);
+  // used_in_roles_except (attribute side) must agree with prohibited_states_and_properties (role side)
+  const exceptions = new Map(
+    attrAtoms.filter((a) => Array.isArray(a.fm.used_in_roles_except)).map((a) => [a.fm.attribute, a.fm.used_in_roles_except]),
+  );
+  gate(dataset, roleNames, attributeNames, limits, exceptions);
   return dataset;
 }
 
@@ -67,7 +73,7 @@ function buildRole(atom, attributeNames) {
     supported: rel('supported_states_and_properties'),
     inherited: rel('inherited_states_and_properties'),
     prohibited: rel('prohibited_states_and_properties'),
-    deprecatedOn: parseDeprecatedOnRole(atom.body),
+    deprecatedOn: deprecatedAttributes(fm.deprecated_states_and_properties, name, attributeNames),
     nameFrom: list(fm.name_from),
     accessibleNameRequired: bool(fm.accessible_name_required),
     childrenPresentational: bool(fm.children_presentational),
@@ -84,8 +90,16 @@ function buildRole(atom, attributeNames) {
 function buildAttribute(atom, globals) {
   const fm = atom.fm;
   const name = fm.attribute;
-  const usedIn = fm.used_in_roles;
-  const isGlobal = globals.has(name) || (typeof usedIn === 'string' && /^All elements/i.test(usedIn));
+  // Two sources agree for every global attribute except the four whose global use is deprecated
+  // (aria-disabled, aria-errormessage, aria-haspopup, aria-invalid): the spec keeps them in the
+  // global list with a note but their own table now enumerates roles. Anything else is drift.
+  const usedEverywhere = typeof fm.used_in_roles === 'string' && /^All elements of the base markup/i.test(fm.used_in_roles);
+  const inGlobalList = globals.has(name);
+  if (usedEverywhere && !inGlobalList) throw new Error(`Attribute ${name}: used on all elements but missing from the global list`);
+  if (inGlobalList && !usedEverywhere && !globals.get(name).globalDeprecated) {
+    throw new Error(`Attribute ${name}: in the global list but its table enumerates roles without a deprecation note`);
+  }
+  const isGlobal = usedEverywhere || inGlobalList;
   return compact({
     name,
     kind: fm.kind,
@@ -139,13 +153,16 @@ function parseGlobalList(body, minGlobals) {
   return out;
 }
 
-/** <li><a href=...#aria-x><code>aria-x</code></a> … <strong>(deprecated on this role in ARIA 1.2)</strong></li> */
-function parseDeprecatedOnRole(body) {
-  const out = new Set();
-  const re = /<li><a href="[^"]*#(aria-[a-z]+)"><code>\1<\/code><\/a>[^<]*<strong>\(deprecated on this role[^)]*\)<\/strong><\/li>/g;
-  let m;
-  while ((m = re.exec(body))) out.add(m[1]);
-  return [...out].sort();
+/** `deprecated_states_and_properties: [{ attribute, since }]` → sorted attribute names. */
+function deprecatedAttributes(entries, roleName, attributeNames) {
+  if (entries == null) return [];
+  if (!Array.isArray(entries)) throw new Error(`Role ${roleName}: deprecated_states_and_properties must be a list`);
+  const names = entries.map((e) => {
+    if (!e || typeof e.attribute !== 'string') throw new Error(`Role ${roleName}: malformed deprecated entry ${JSON.stringify(e)}`);
+    if (!attributeNames.has(e.attribute)) throw new Error(`Role ${roleName}: unknown deprecated attribute "${e.attribute}"`);
+    return e.attribute;
+  });
+  return [...new Set(names)].sort();
 }
 
 /** "Deprecated in ARIA 1.2" at role or attribute level, taken from the first two paragraphs only. */
@@ -210,7 +227,7 @@ function cleanMarkdown(md) {
 const byName = (a, b) => a.name.localeCompare(b.name);
 
 function normalizeAttrList(v) {
-  return [...new Set(list(v).map((s) => s.replace(/\s*\(state\)\s*$/i, '').trim()).filter(Boolean))].sort();
+  return [...new Set(list(v))].sort();
 }
 function list(v) {
   if (v == null) return [];
@@ -241,8 +258,17 @@ function readAtom(file) {
   return { file, fm: YAML.parse(m[1]), body: m[2] };
 }
 
-function gate(ds, roleNames, attributeNames, limits) {
+function gate(ds, roleNames, attributeNames, limits, exceptions) {
   const concrete = ds.roles.filter((r) => !r.abstract);
+  for (const [attribute, roles] of exceptions) {
+    for (const roleName of roles) {
+      const role = ds.roles.find((r) => r.name === roleName);
+      if (!role) throw new Error(`Attribute ${attribute}: used_in_roles_except names unknown role "${roleName}"`);
+      if (!(role.prohibited ?? []).includes(attribute)) {
+        throw new Error(`Attribute ${attribute}: excepted on ${roleName} but that role does not prohibit it`);
+      }
+    }
+  }
   if (ds.attributes.length < limits.minAttributes) {
     throw new Error(`Only ${ds.attributes.length} attributes parsed; expected ≥ ${limits.minAttributes}`);
   }

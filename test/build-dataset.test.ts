@@ -32,15 +32,22 @@ describe('build-dataset (fixture corpus)', () => {
     expect(button.required).toBeUndefined();
   });
 
-  it('strips "(state)" suffixes that appear in some role tables', () => {
+  it('reads abstract role relations as-is (W3C-REFS now strips kind suffixes)', () => {
     expect(roletype.supported).toEqual(['aria-disabled', 'aria-errormessage', 'aria-label']);
   });
 
-  it('captures per-role deprecation markers from the HTML characteristics table', () => {
+  it('takes per-role deprecation from deprecated_states_and_properties frontmatter', () => {
     expect(button.deprecatedOn).toEqual(['aria-errormessage']);
+    expect(ds.roles.find((r) => r.name === 'generic')!.deprecatedOn).toBeUndefined();
   });
 
-  it('derives isGlobal from the spec list and the "All elements" phrase, with global deprecation notes', () => {
+  it('cross-checks used_in_roles_except against role-side prohibitions', () => {
+    // aria-label is excepted on generic in the fixture, and generic prohibits it: passes.
+    expect(ds.roles.find((r) => r.name === 'generic')!.prohibited).toEqual(['aria-label']);
+    expect(byName('aria-label').isGlobal).toBe(true);
+  });
+
+  it('derives isGlobal from the "All elements" phrase, with global deprecation notes from the spec list', () => {
     expect(byName('aria-disabled').isGlobal).toBe(true);
     expect(byName('aria-disabled').globalDeprecated).toBe('ARIA 1.2');
     expect(byName('aria-label').isGlobal).toBe(true);

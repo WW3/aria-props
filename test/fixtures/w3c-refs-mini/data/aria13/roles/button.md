@@ -15,6 +15,9 @@ supported_states_and_properties:
 inherited_states_and_properties:
   - aria-errormessage
   - aria-label
+deprecated_states_and_properties:
+  - attribute: aria-errormessage
+    since: ARIA 1.2
 name_from:
   - contents
   - author

@@ -9,7 +9,7 @@ is_abstract: true
 subclass_roles:
   - widget
 supported_states_and_properties:
-  - aria-disabled (state)
+  - aria-disabled
   - aria-errormessage
   - aria-label
 version_line: WAI-ARIA 1.3
@@ -25,4 +25,4 @@ tags:
 
 The base role from which all other roles inherit.
 
-<table><caption>Characteristics:</caption><tbody><tr><th scope="row">Supported States and Properties:</th><td><ul><li><a href="https://w3c.github.io/aria/#aria-disabled"><code>aria-disabled</code></a> (state)</li></ul></td></tr></tbody></table>
+<table><caption>Characteristics:</caption><tbody><tr><th scope="row">Supported States and Properties:</th><td><ul><li><a href="https://w3c.github.io/aria/#aria-disabled"><code>aria-disabled (state)</code></a></li></ul></td></tr></tbody></table>

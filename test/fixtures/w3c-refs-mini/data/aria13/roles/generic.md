@@ -1,29 +1,26 @@
 ---
-id: aria13:role:widget
+id: aria13:role:generic
 ref: aria13
 type: role
-title: widget abstract role
-role: widget
-abstract: true
-is_abstract: true
+title: generic role
+role: generic
+abstract: false
 superclass_role:
-  - roletype
-subclass_roles:
-  - button
-  - generic
+  - widget
+prohibited_states_and_properties:
+  - aria-label
 inherited_states_and_properties:
   - aria-disabled
   - aria-errormessage
-  - aria-label
+name_from: prohibited
 version_line: WAI-ARIA 1.3
 spec_status: WD
-source_url: https://w3c.github.io/aria/#widget
+source_url: https://w3c.github.io/aria/#generic
 upstream_updated: 2026-08-29
 upstream_commit: 2f5c69b053c2b03f03fb00b4c9ff2c4ce517af55
 license: W3C Document License / W3C Software and Document Notice
 related: []
-tags:
-  - abstract-role
+tags: []
 ---
 
-An interactive component of a graphical user interface (GUI).
+A nameless container element that has no semantic meaning on its own.

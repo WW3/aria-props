@@ -24,9 +24,10 @@ node scripts/validate-dataset.mjs   # schema + referential integrity
 ```
 
 The generator looks for W3C-REFS at `--refs`, `$W3C_REFS_DIR`, `../../_work/W3C-REFS`, `../W3C-REFS`, then `./.w3c-refs`.
-Relations are taken from the **role** atoms (`required_/supported_/inherited_/prohibited_states_and_properties`);
-per-role deprecation markers and the global list are parsed from the atom bodies. See [PLAN.md](PLAN.md) for the schema
-and the reasoning.
+Relations and per-role deprecation are taken from the **role** atoms (`required_/supported_/inherited_/prohibited_` and
+`deprecated_states_and_properties`); `isGlobal` comes from the attribute's `used_in_roles`, and the generator
+cross-checks `used_in_roles_except` against the role-side prohibitions. Needs W3C-REFS at commit `07c6e0f` or later.
+See [PLAN.md](PLAN.md) for the schema and the reasoning.
 
 **Refreshing the data.** W3C-REFS syncs from w3c/aria every Monday. When it has changed, from this repo:
 

@@ -18,7 +18,7 @@ Status legend: [x] done · [ ] pending · [~] partial
 | Data provider | Generator in this repo reads W3C-REFS role/attribute atoms (`scripts/build-dataset.mjs`) | Keeps W3C-REFS untouched; role-side frontmatter is the reliable side (attribute-side `used_in_roles` mis-parses "except for" lists) |
 | Relations source | Role atoms only; attribute→roles is derived in the app | Single direction avoids two lists drifting apart |
 | Globals | `isGlobal` flag on the attribute (from the spec's Global States and Properties list) + per-role `prohibited`/`deprecatedOn` | Matches the spec model instead of expanding globals into every role |
-| Deprecation | Parsed from the HTML characteristics table markers `(deprecated on this role in ARIA 1.2)` and from "Deprecated in ARIA x.y" paragraphs | W3C-REFS frontmatter does not carry these yet |
+| Deprecation | Per-role: `deprecated_states_and_properties` frontmatter (W3C-REFS ≥ 07c6e0f). Spec-level: "Deprecated in ARIA x.y" first paragraph | The per-role markers and the `used_in_roles` "except for" bug were fixed upstream from `docs/w3c-refs-aria13-adapter-issues.md`; spec-level deprecation (issue 5 there) is still prose only |
 | Components | Native custom elements, **light DOM** (no shadow root) | A query tool is one page with one stylesheet; light DOM keeps `aria-describedby`, focus management and global styles trivial |
 | Build | Vite + TypeScript, `vite-plugin-singlefile` → `dist/index.html` | Zero runtime deps, file:// friendly, still a normal dev server |
 | Tests | Vitest: pure query module + generator against a fixture corpus + schema validation | Replaces regex-on-HTML smoke tests |

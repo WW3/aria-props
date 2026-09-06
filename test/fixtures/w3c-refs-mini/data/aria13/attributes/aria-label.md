@@ -5,7 +5,8 @@ type: property
 title: aria-label property
 attribute: aria-label
 kind: property
-used_in_roles:
+used_in_roles: All elements of the base markup
+used_in_roles_except:
   - generic
 value: string
 version_line: WAI-ARIA 1.3
